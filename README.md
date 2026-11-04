@@ -2,7 +2,10 @@
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge)</h1>
+<!-- fork-notice -->
+<h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge-optimized)</h1>
+
+> **Derivative branch, not the upstream release.** This repository is based on [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) **1.1.90** and restores the skill library (23 skills), the POC/EXP knowledge base, and the local-lab allowlist, plus category filtering and pagination for the nuclei template index. Upstream network-scope rules, DNS checks, game-cheat interception, and the evidence-chain tools are unchanged. Copyright stays with HunYiSage; Apache-2.0. For the upstream build use the upstream repo; install commands below already point at this branch.
 
 <p align="center"><strong>Version 1.1.91-opt.1</strong></p>
 
@@ -13,17 +16,12 @@
 <p align="center">
   <a href="https://github.com/lzzzz666888/dsh-purge-optimized/stargazers"><img src="https://img.shields.io/github/stars/lzzzz666888/dsh-purge-optimized?logo=github&label=Stars" alt="GitHub stars"></a>
   <a href="https://github.com/lzzzz666888/dsh-purge-optimized/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
-  <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="awesome · DSH plugin"></a>
-  <a href="https://deepseek.stream/plugins/dsh-purge"><img src="https://img.shields.io/badge/Hub-dsh--purge-1a73e8" alt="DeepSeek Harness Hub"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.0--rc.2%20%2F%200.2.1--rc.2-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
 </p>
 
-<p align="center">
-  <a href="https://dsh-plugin.org/plugins/yujunzhixue/dsh-purge"><img src="https://dsh-plugin.org/badges/listed.svg" alt="Listed on dsh-plugin.org"></a>
-</p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja.md">日本語</a>

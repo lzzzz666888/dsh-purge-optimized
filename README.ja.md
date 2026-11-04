@@ -2,7 +2,10 @@
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness サイバーセキュリティ レッドチームツール (dsh-purge)</h1>
+<!-- fork-notice -->
+<h1 align="center">⚔️ DeepSeek Harness サイバーセキュリティ レッドチームツール (dsh-purge-optimized)</h1>
+
+> **派生ブランチであり、上流のリリースではありません。** 本リポジトリは [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) **1.1.90** を基にしており、スキルライブラリ（23 個）、POC/EXP ナレッジベース、ローカルラボの許可リストを復元し、nuclei テンプレートのカテゴリ絞り込みとページ送りを追加しています。上流のネットワーク範囲制限、DNS 判定、チート検出、証拠チェーンツールはそのままです。著作権は HunYiSage に帰属し、Apache-2.0 です。上流版は上流リポジトリから、本ブランチは下記のインストール手順（URL は本リポジトリを指しています）からどうぞ。
 
 <p align="center"><strong>バージョン 1.1.91-opt.1</strong></p>
 
@@ -13,17 +16,12 @@
 <p align="center">
   <a href="https://github.com/lzzzz666888/dsh-purge-optimized/stargazers"><img src="https://img.shields.io/github/stars/lzzzz666888/dsh-purge-optimized?logo=github&label=Stars" alt="GitHub stars"></a>
   <a href="https://github.com/lzzzz666888/dsh-purge-optimized/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
-  <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="awesome · DSH plugin"></a>
-  <a href="https://deepseek.stream/plugins/dsh-purge"><img src="https://img.shields.io/badge/Hub-dsh--purge-1a73e8" alt="DeepSeek Harness Hub"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.0--rc.2%20%2F%200.2.1--rc.2-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
 </p>
 
-<p align="center">
-  <a href="https://dsh-plugin.org/plugins/yujunzhixue/dsh-purge"><img src="https://dsh-plugin.org/badges/listed.svg" alt="Listed on dsh-plugin.org"></a>
-</p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja.md">日本語</a>
@@ -37,7 +35,7 @@ dsh-purge は当初、原作者が個人で開発したプロジェクトです�
 
 - **オープンソース版はローカルラボ専用です。** 攻撃タスクはループバックおよび RFC1918 のプライベートアドレスのみを対象とします。ドメインは先に名前解決され（hosts を含む）、解決されたすべてのアドレスがプライベートまたはループバックである必要があります。ラボ名を公開アドレスに向ける hosts 設定、名前解決の失敗、公開アドレスが混在する応答は拒否されます。
 - **ゲームチートは禁止です。** エイムボット、ウォールハック、メモリ改ざん、アンチチート回避を含み、プロンプト層とセッションゲートの両方で阻止します。
-- オープンソース版にはスキルライブラリとナレッジベースは含まれません。
+- スキルライブラリとナレッジベースはパッケージに同梱され、既定で有効です。`skills/redteam/` の 23 個のスキルは起動時に `$DSH_HOME/redteam/skills` へ同期され、POC/EXP ストアは `$DSH_HOME/redteam/knowledge.db` に置かれます。サイドバーに専用の「ナレッジベース」「スキルライブラリ」タブがあります。
 
 **派生ブランチであり、上流を明記します。** 本リポジトリは [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) 1.1.90 の派生です。上流に加えて、スキルライブラリ、ナレッジベース、ローカルラボの許可リストを復元しています。上流の著作権は HunYiSage に帰属し、Apache License 2.0 のままです。フォークおよび派生作品は、上流 [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) と本ブランチ [lzzzz666888/dsh-purge-optimized](https://github.com/lzzzz666888/dsh-purge-optimized) の両方を明記することを条件に許可されます。**オリジナルビルドの転売は禁止です。** 有料転売、ストア掲載のための再スキン、商用製品としての配布は許可されません。
 

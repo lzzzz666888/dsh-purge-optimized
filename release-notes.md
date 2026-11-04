@@ -1,3 +1,31 @@
+# 1.1.91-opt.1
+
+## 中文
+
+- 版本 **1.1.91-opt.1**，上游基线 **1.1.90**。衍生分支，不是上游版本。
+- **恢复技能库**：`skills/redteam/` 从 1.1.71 逐字节搬回 23 个技能，`package.json` 的 `files` 重新包含 `"skills"`。1.1.90 打包时丢了这个目录，`installBundledSkills()` 一直返回 `{action:'missing'}`，一个文件都不落盘，而提示词和 `skill-fixes.js` 仍在引用 gogo-intranet / fscan-intranet 这些名字。
+- **恢复知识库**：`store-core.js` 的 dispatch 不再短路 `pocSearch|pocList|pocGet|pocSave|pocUpdate|pocDelete|pocUse|pocStats`，`tools.js` 删除 `KB_DISABLED` 常量与 6 处早退。底层 SQLite 方法原本就完整，只是上层被封。
+  - `pocGet` 未命中返回 `{ok:false,error}` 而不是 throw；`pocUpdate` 外层补 try/catch。
+  - 5 个工具的 `execute()` 原本漏写 `args` 参数（早退导致永不执行到），一并补成 `(args, exec)`。
+- **恢复本地靶场白名单**：`writeAllowText()` 在 1.1.90 里是空函数，写入不落盘；`readAllowExact` / `permittedHost` / `isOwnNetwork` / `isSkippedV4` 被整个删除。现已按原逻辑恢复，并补回设置页的输入框与保存按钮（1.1.90 只剩一个标题）。
+- **模板索引增强**：`searchTemplates()` 增加 `offset` / `matched` / `byCategory` 与每项的 `category` / `categoryName`；`templateStats()` 增加 `byCategory`。上游 1.1.90 的界面对着这三个字段取值，但后端一个都不返回，翻页与类目条实际是死的（1.1.71 同样如此）。
+- **页签接回**：侧栏 tabs 补回「知识库」「技能库」，路由从「三条全给 EnvTab」拆成三条独立路由。
+- **保持不动**：`isLocalLabV4` 私网门禁、`lookupIps` 的 DNS 解析判定（2s 超时 / 5s 缓存 / 256 条上限）、`isCheatTask` 游戏外挂拦截、`tools/pre-execute` 钩子、8 个证据链工具、`presets/redteam/agent.cordis.yml` 里已删除的 `toolFilter`（0.2.1 写回会让整份预设注册失败）。
+- **归属**：本分支为 Apache-2.0，上游版权归 HunYiSage；NOTICE 保留上游原文，仅追加本分支说明。
+
+## English
+
+- **1.1.91-opt.1**, based on upstream **1.1.90**. Derivative branch, not an upstream release.
+- **Skill library restored**: the 23 skills under `skills/redteam/` are copied byte-for-byte from 1.1.71 and `files` in `package.json` includes `"skills"` again. Upstream 1.1.90 stopped shipping that directory, so `installBundledSkills()` always returned `{action:'missing'}` and copied nothing, while the prompts and `skill-fixes.js` still referenced names like gogo-intranet and fscan-intranet.
+- **Knowledge base re-enabled**: `store-core.js` no longer short-circuits `pocSearch|pocList|pocGet|pocSave|pocUpdate|pocDelete|pocUse|pocStats`, and `tools.js` drops the `KB_DISABLED` constant plus its six early returns. The SQLite layer underneath was intact the whole time.
+  - `pocGet` returns `{ok:false,error}` on a miss instead of throwing; `pocUpdate` is wrapped in try/catch.
+  - Five tools had `execute()` without an `args` parameter because the early return made that unreachable; they now take `(args, exec)`.
+- **Local-lab allowlist restored**: `writeAllowText()` was an empty stub in 1.1.90 that never wrote to disk, and `readAllowExact` / `permittedHost` / `isOwnNetwork` / `isSkippedV4` had been deleted. The original behaviour is back, together with the settings panel textarea and save button (1.1.90 had reduced that block to a bare heading).
+- **Template index improved**: `searchTemplates()` now returns `offset` / `matched` / `byCategory` plus per-item `category` / `categoryName`; `templateStats()` gains `byCategory`. The 1.1.90 UI reads all three, but the backend returned none of them, so pagination and the category bar were inert (1.1.71 had the same bug).
+- **Tabs reconnected**: the sidebar tabs list includes Knowledge and Skills again, and the three previously merged routes each get their own branch instead of all falling through to `EnvTab`.
+- **Left untouched**: the `isLocalLabV4` private-network gate, the `lookupIps` DNS check (2s timeout / 5s cache / 256 entries), `isCheatTask` game-cheat interception, the `tools/pre-execute` hook, the eight evidence-chain tools, and the removed `toolFilter` in `presets/redteam/agent.cordis.yml` (writing it back breaks preset registration on 0.2.1).
+- **Attribution**: this branch is Apache-2.0; upstream copyright stays with HunYiSage. NOTICE keeps the upstream text and only appends a branch note.
+
 # 1.1.90
 
 ## 中文

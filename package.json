@@ -1,7 +1,7 @@
 {
   "name": "dsh-purge",
-  "version": "1.1.90",
-  "description": "DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分",
+  "version": "1.1.91-opt.1",
+  "description": "dsh-purge 优化版（衍生分支）：在上游 1.1.90 基础上恢复技能库 23 个技能、POC/EXP 知识库与本地靶场白名单，并补齐 nuclei 模板类目筛选与翻页。Derivative branch of dsh-purge — restores the skill library, knowledge base and local-lab allowlist.",
   "author": "dsh-purge maintainers",
   "type": "module",
   "main": "lib/index.js",
@@ -26,6 +26,7 @@
     "docs",
     "presets",
     "scripts",
+    "skills",
     "client.js",
     "cordis.patch.yml",
     "screenshots.json",
@@ -57,11 +58,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HunYiSage/dsh-purge.git"
+    "url": "git+https://github.com/lzzzz666888/dsh-purge-optimized.git"
   },
-  "homepage": "https://github.com/HunYiSage/dsh-purge#readme",
+  "homepage": "https://github.com/lzzzz666888/dsh-purge-optimized#readme",
   "bugs": {
-    "url": "https://github.com/HunYiSage/dsh-purge/issues"
+    "url": "https://github.com/lzzzz666888/dsh-purge-optimized/issues"
   },
   "dsh": {
     "bundle": {
@@ -80,9 +81,9 @@
     },
     "install": {
       "preferred": "tarball",
-      "tarball": "https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master",
-      "zip": "https://codeload.github.com/HunYiSage/dsh-purge/zip/refs/heads/master",
-      "git": "https://github.com/HunYiSage/dsh-purge.git"
+      "tarball": "https://codeload.github.com/lzzzz666888/dsh-purge-optimized/tar.gz/refs/heads/master",
+      "zip": "https://codeload.github.com/lzzzz666888/dsh-purge-optimized/zip/refs/heads/master",
+      "git": "https://github.com/lzzzz666888/dsh-purge-optimized.git"
     }
   },
   "publishConfig": {

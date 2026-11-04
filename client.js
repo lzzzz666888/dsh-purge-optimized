@@ -140,7 +140,7 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"welcome.lead": "首次安装本插件时请阅读以下说明。确认后本窗不再弹出。",
 			"welcome.warn": "本插件免费开源。任何未署名的付费转售、倒卖或商业牟利行为，维护团队将依法追究责任。",
 			"welcome.body": "dsh-purge 是 DeepSeek Harness 的本机网络安全红队评测与清洗插件：在受控本机环境中调整提示词与补丁、做授权范围内的演练台操作。项目免费、非营利，源码仓库：",
-			"welcome.repo": "https://github.com/HunYiSage/dsh-purge",
+			"welcome.repo": "https://github.com/lzzzz666888/dsh-purge-optimized",
 			"welcome.ban1": "禁止将本项目用于未授权的网络攻击、入侵、窃取数据、破坏系统或任何违法犯罪。",
 			"welcome.ban2": "禁止商业售卖、付费倒卖、黑灰产牟利，以及未署名的营利性再分发。",
 			"welcome.ban3": "使用者须自行遵守所在地法律法规与平台规范；违法后果由行为人自行承担，与维护团队无关。",
@@ -175,7 +175,7 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"purge.title": "补丁",
 			"override.title": "提示词",
 			"own.title": "本地靶场",
-			"own.hint": "开源版攻击任务只放行本机/内网 IP。域名会先解析，解析到的每一个地址都必须是私网或回环；hosts 把 .lab 指到公网 IP 也会拦。解析失败或混有公网地址一律拦截。",
+			"own.hint": "攻击任务默认只放行本机/内网 IP。域名会先解析，解析到的每一个地址都必须是私网或回环；hosts 把 .lab 指到公网 IP 也会拦。下面逐条填的 IP / 完整主机名是唯一例外（一行一条，不认网段和通配符）。",
 			"own.save": "保存名单",
 			"saved.own": "已保存自己的服务器",
 			"saved.own.dropped": "已保存。有 {n} 行不是单个 IP 或主机名，已丢掉",
@@ -501,7 +501,7 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"welcome.lead": "Please read this on first install. After you confirm, it will not appear again.",
 			"welcome.warn": "This plugin is free and open source. Unattributed paid resale, resale, or commercial exploitation may result in legal action by the maintainers.",
 			"welcome.body": "dsh-purge is a local DeepSeek Harness plugin for security evaluation and cleaning: adjust prompts and patches on a machine you control, and use the drill console only within authorized scope. It is free and non-profit. Repository:",
-			"welcome.repo": "https://github.com/HunYiSage/dsh-purge",
+			"welcome.repo": "https://github.com/lzzzz666888/dsh-purge-optimized",
 			"welcome.ban1": "Do not use this project for unauthorized attacks, intrusion, data theft, sabotage, or any illegal activity.",
 			"welcome.ban2": "Do not commercially sell, resell, or profit from gray-market use, or redistribute for profit without attribution.",
 			"welcome.ban3": "You must follow local law and platform rules; illegal use is solely your responsibility.",
@@ -536,7 +536,7 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"purge.title": "Patches",
 			"override.title": "Prompt",
 			"own.title": "Local lab only",
-			"own.hint": "The open-source build only allows localhost/private IPs. Domains are resolved first; every A/AAAA must be loopback or RFC1918. A hosts entry that points .lab at a public IP is blocked. Failed or mixed public answers are denied.",
+			"own.hint": "Attack tasks default to localhost/private IPs. Domains are resolved first; every A/AAAA must be loopback or RFC1918. A hosts entry that points .lab at a public IP is blocked. The IPs / exact hostnames listed below are the only exception (one per line; no CIDR or wildcards).",
 			"own.save": "Save list",
 			"saved.own": "Own servers saved",
 			"saved.own.dropped": "Saved. {n} lines were not a single IP or hostname and were dropped",
@@ -2258,7 +2258,39 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 				}, t("need.prompt")) : null,
 				h("div", { className: "dshp-sub" },
 					h("h4", null, t("own.title")),
+					h("div", { className: "dshp-row", style: { margin: 0 } },
+						h(Btn, {
+							kind: "primary",
+							tiny: true,
+							disabled: !ownLoaded,
+							onClick: () => {
+								fetch("/dsh-purge/own-servers", {
+									method: "POST",
+									headers: { "content-type": "application/json" },
+									body: JSON.stringify({ content: ownServers }),
+								}).then((r) => r.json()).then((d) => {
+									if (!d || !d.ok) {
+										setNotice({ kind: "error", text: (d && d.error) || t("err.override", { error: "" }) });
+										return;
+									}
+									if (typeof d.content === "string") setOwnServers(d.content);
+									setNotice({
+										kind: "ok",
+										text: d.dropped > 0 ? t("saved.own.dropped", { n: d.dropped }) : t("saved.own"),
+									});
+								}).catch((e) => setNotice({ kind: "error", text: e.message }));
+							},
+						}, t("own.save")),
+					),
 				),
+				h("textarea", {
+					className: "dshp-area",
+					value: ownServers,
+					onChange: (e) => setOwnServers(e.target.value),
+					spellCheck: false,
+					rows: 4,
+					style: { minHeight: 96 },
+				}),
 				h("p", { className: "dshp-hint", style: { margin: "8px 0 0", color: "var(--dshp-mute)", fontSize: 12 } }, t("own.hint")),
 			);
 		}
@@ -7885,6 +7917,7 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
         ['assets', '资产测绘'], ['env', '环境适配'], ['agents', '智能体'], ['sessions', '会话隧道'],
         ['findings', '漏洞战果'],
         ['chain', '攻击链'], ['scores', '得分目标'], ['report', '报告'],
+        ['knowledge', '知识库'], ['skills', '技能库'],
       ]
       const full = isFullWindow()
       const openFull = () => {
@@ -7909,8 +7942,10 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 
       let body
       if (err) body = h('div', { className: 'rt-err' }, err)
-      /* 全局页：没有靶标也能看（环境适配 / 智能体概览）。开源版下架知识库和技能库。 */
-      else if (st.tab === 'env' || st.tab === 'knowledge' || st.tab === 'skills') body = h(EnvTab, { refreshKey: refreshKey })
+      /* 全局页：没有靶标也能看（环境适配 / 智能体概览 / 知识库 / 技能库）。 */
+      else if (st.tab === 'env') body = h(EnvTab, { refreshKey: refreshKey })
+      else if (st.tab === 'knowledge') body = h(KnowledgeTab, { refreshKey: refreshKey })
+      else if (st.tab === 'skills') body = h(SkillsTab, { refreshKey: refreshKey })
       else if (st.tab === 'agents' || st.tab === 'prompts') body = h(AgentsTab, { engagement: eng, refreshKey: refreshKey })
       else if (!eng) {
         body = h('div', { className: 'rt-pane' },

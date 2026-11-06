@@ -34,3 +34,6 @@ default-prompt-inject.md
 *.asar
 *.asar.bak
 *.bak
+
+# 补丁改写前的单文件备份
+*.bak-*

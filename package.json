@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "1.1.91-opt.1",
+  "version": "1.1.91-opt.2",
   "description": "dsh-purge 优化版（衍生分支）：在上游 1.1.90 基础上恢复技能库 23 个技能、POC/EXP 知识库与本地靶场白名单，并补齐 nuclei 模板类目筛选与翻页。Derivative branch of dsh-purge — restores the skill library, knowledge base and local-lab allowlist.",
   "author": "dsh-purge maintainers",
   "type": "module",
@@ -95,9 +95,10 @@
   "engines": {
     "node": ">=18"
   },
-  "dshTarget": "0.2.1-rc.2",
+  "dshTarget": "0.2.2-rc.1",
   "dshTargets": [
-    "0.2.1-rc.2",
-    "0.2.1-rc.5"
+    "0.2.2-rc.1",
+    "0.2.1-rc.5",
+    "0.2.1-rc.2"
   ]
 }

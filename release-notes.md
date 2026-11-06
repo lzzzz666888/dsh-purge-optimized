@@ -1,3 +1,30 @@
+# 1.1.91-opt.2
+
+## 中文
+
+- 版本 **1.1.91-opt.2**，适配宿主 **DSH 0.2.2-rc.1**。`dshTarget` 改为 `0.2.2-rc.1`，`dshTargets` 为 `["0.2.2-rc.1","0.2.1-rc.5","0.2.1-rc.2"]`。
+- **修补 0.2.2 上失效的 9 条补丁**（宿主源码改写导致 pattern 不命中、`targetFiles()` 解析不到文件）：
+  - `#14` 沙箱提权改为无条件放行。0.2.2 在 `approver.request` 参数里插入 `displayReason: escalationDisplayReason(mode, justification)`，旧 pattern 缺这一行。**同时修掉旧覆写借用 `#13` marker 造成的假绿**：之前 `#13` 一打上，`#14` 就永远判 already，`"allowed-once"` 守卫从未落盘。
+  - `#17` 编辑观测策略免读：0.2.2 把 `editIntent()` 压缩成三行，pattern 改为新形状。
+  - `#40` 完整提示词保留注入：0.2.2 的早返回与末返回都多带 `tools` 字段，重写为按 `dsh-purge` 前缀重排 sections。
+  - `#54` 交付物提示文案：整段已迁到新包 `dsh-deliverable-file-references`，改指该文件。
+  - `#60` 沙箱提权文案中性化：文案从 `dsh-tools` 迁到 `dsh-tool-executor-ptc`（含扁平化副本 `lib/types/ptc.js`）。
+  - `#62` 工具审批失败放行：0.2.2 是 `approval === void 0`（非 `undefined`），且实际文件是 `dsh-tools/lib/pipeline.js` 与 `lib/types/pipeline.js`，两者都补进 `targetFiles()`。
+  - `#67` `agent-loop` 消息守卫：0.2.2 缩进从 4 tab 变 5 tab。
+  - `#74` 组装前置钩子：0.2.2 在 `claim()` 与 `assemble()` 之间插入了 `model.current()` 和 `tools.resolve()`。
+  - `#82` 桌面壳 profile 兜底：0.2.2 把 mime 的 `//#region` 插进了两行之间，pattern 改为只锚那行唯一的 import。
+- **新增 `shellMainFromAiBase(aiBase)`**：CLI / web 表面下 `officialShellMain()` 恒为空（`process.execPath` 是 `node.exe`），导致 `#82` 一类桌面壳补丁报 `missing_file`。改为从 `aiBase` 上溯三级反推 `<resources>/app/{lib/,}main.js`，且只在 `desktop.isInsideDesktopInstall()` 为真时认。
+- **`targetFiles()` 新增 5 个键**：`deliverable-file-references`、`ptc-executor`、`ptc-executor-types`、`dsh-tools-pipeline`、`dsh-tools-pipeline-types`。
+- **补丁幂等性**：`#92`/`#93` 是插入型补丁，pattern 在产物里仍存在却没有 `skipIfMarked`，每次 apply 都会再插一段（实测 `main.js` 里累积 8 份重复日志代码，838520 → 859369 字节）。加上 `skipIfMarked: true` 后连跑两次大小不变。
+
+## English
+
+- **1.1.91-opt.2** targets host **DSH 0.2.2-rc.1**: `dshTarget` is `0.2.2-rc.1`, `dshTargets` is `["0.2.2-rc.1","0.2.1-rc.5","0.2.1-rc.2"]`.
+- **Repairs the nine patches that stopped matching on 0.2.2** (upstream rewrote the anchor text and `targetFiles()` no longer resolved the files): `#14` sandbox escalation becomes unconditional (0.2.2 inserted `displayReason: escalationDisplayReason(mode, justification)` into the approval request — and the previous override only borrowed `#13`'s marker, so `#14` was reported as already applied while the real guard never landed); `#17` observation-free edits; `#40` complete prompt keeps the inject section (0.2.2 returns an extra `tools` field in both branches); `#54` deliverable wording moved into the new `dsh-deliverable-file-references` package; `#60` neutral sandbox-escalation copy moved into `dsh-tool-executor-ptc` (plus its flattened types copy); `#62` fail-open tool approval when no approval channel exists (0.2.2 compares against `void 0`, and the live files are `dsh-tools/lib/pipeline.js` and `lib/types/pipeline.js`); `#67` agent-loop message guard (indentation went from four tabs to five); `#74` pre-assemble hook (0.2.2 resolves the model and tool set between `claim()` and `assemble()`); `#82` desktop shell profile fallback (only the import line is anchored now).
+- **New `shellMainFromAiBase(aiBase)`** derives `<resources>/app/{lib/,}main.js` from the `@deepseek-ai` base so desktop-shell patches stop reporting `missing_file` on CLI and web surfaces, guarded by `desktop.isInsideDesktopInstall()`.
+- **Five new `targetFiles()` keys** for the packages 0.2.2 moved content into.
+- **Idempotent patches**: `#92`/`#93` are insert-style patches whose anchor text survives in the output, so every apply appended another copy (eight duplicates accumulated in `main.js`). Adding `skipIfMarked: true` makes repeated applies a no-op.
+
 # 1.1.91-opt.1
 
 ## 中文

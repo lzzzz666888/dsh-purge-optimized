@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as core from "../lib/core.js";
+import { removeTreeNoFollowSync } from "../lib/remove-tree.js";
 import * as rules from "../lib/rules.js";
 import * as reapply from "../lib/reapply.js";
 
@@ -28,7 +29,7 @@ function printStatus(state) {
   out.push(`  补丁 ${state.patches_applied}/${core.ALL_PATCHES.length} 已清洗, ${state.patches_pending} 待清洗`
     + (state.patches_drifted ? `, ${state.patches_drifted} 漂移（官方原文已改，需更新 pattern）` : ""));
   if (state.host_version) {
-    const compat = state.host_supported === false ? `  ← 未适配：插件声明 ${state.host_target || "?"}` : "";
+    const compat = state.host_supported === false ? `  · 未逐条验证（插件声明 ${state.host_target || "?"}）：补丁照写，看逐条状态` : "";
     out.push(`  宿主版本 / host  ${state.host_version}${compat}`);
   }
   for (const p of core.ALL_PATCHES) {
@@ -41,8 +42,17 @@ function printStatus(state) {
   return out.join("\n");
 }
 
+function flagValue(name) {
+  const i = args.indexOf(name);
+  if (i < 0) return "";
+  return args[i + 1] && !args[i + 1].startsWith("--") ? args[i + 1] : "";
+}
+
 async function main() {
-  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help"].includes(a));
+  const mode = args.find((a) => [
+    "--apply", "--revert", "--uninstall", "--status", "--edit", "--help",
+    "--diagnose", "--reanchor", "--reanchor-clear", "--refusal-retry", "--refusal-decompose",
+  ].includes(a));
 
   if (mode === "--help" || args.includes("-h")) {
     console.log(`dsh-purge 用法:
@@ -51,14 +61,104 @@ async function main() {
   dsh-purge --revert     回滚还原
   dsh-purge --uninstall  卸载插件（已应用则先还原）
   dsh-purge --edit       编辑注入文件 prompt-inject.md
+  dsh-purge --diagnose   锚点漂移诊断（文件、行号、旧锚点、候选落点）
+  dsh-purge --reanchor 13 [--index 0] --lines 42-44 [--yes]
+                         把宿主当前 L42-44 的原文钉成 #13 的新锚点
+  dsh-purge --reanchor-clear 13 [--index 0]
+                         撤销本地重锚，恢复出厂锚点
+  dsh-purge --refusal-retry on|off
+                         模型推脱时自动重试（llm/stream 层，默认关）
+  dsh-purge --refusal-decompose on|off
+                         重试仍拒时是否第三次只要最小可交付组件（默认开）
   dsh-purge --help       帮助`);
     return;
   }
 
-  const state = await core.gatherState();
-  console.log(printStatus(state));
+  if (mode === "--refusal-retry" || mode === "--refusal-decompose") {
+    const rr = await import("../lib/refusal-retry.js");
+    const value = String(args[args.indexOf(mode) + 1] || "").trim().toLowerCase();
+    if (!["on", "off"].includes(value)) {
+      console.log(`用法: dsh-purge ${mode} on|off`);
+      process.exit(1);
+    }
+    const key = mode === "--refusal-retry" ? "refusalRetry" : "refusalDecompose";
+    const saved = rr.saveSettings({ [key]: value === "on" }, core.findDshHome());
+    console.log(`✓ ${key} = ${saved[key] === true ? "on" : "off"}`);
+    console.log(`  文件 / file: ${rr.settingsPath(core.findDshHome())}`);
+    console.log("  下一轮对话生效，不需要重启。");
+    return;
+  }
+
+  const state = await core.gatherState();  console.log(printStatus(state));
   console.log("");
 
+  if (mode === "--diagnose") {
+    const { diagnosePatches, formatDiagnose, overrideFile } = await import("../lib/diagnose.js");
+    if (!state.ai_base) {
+      console.log("[ERROR] " + core.missingAiBaseMessage());
+      process.exit(1);
+    }
+    const only = flagValue("--id")
+      ? flagValue("--id").split(",").map((x) => Number(x.trim())).filter((x) => Number.isInteger(x))
+      : [];
+    const rows = await diagnosePatches(state.ai_base, { only, verbose: args.includes("--verbose") });
+    console.log(formatDiagnose(rows));
+    console.log(`重锚覆盖文件 / anchors: ${overrideFile()}`);
+    return;
+  }
+
+  if (mode === "--reanchor" || mode === "--reanchor-clear") {
+    const { reanchorPatch, reanchorClear, overrideFile } = await import("../lib/diagnose.js");
+    if (!state.ai_base) {
+      console.log("[ERROR] " + core.missingAiBaseMessage());
+      process.exit(1);
+    }
+    const idArg = args[args.indexOf(mode) + 1];
+    const patchId = Number(String(idArg || "").replace(/^#/, ""));
+    if (!Number.isInteger(patchId)) {
+      console.log("用法: dsh-purge --reanchor 13 [--index 0] --lines 42-44 [--yes]");
+      process.exit(1);
+    }
+    const indexArg = flagValue("--index");
+    const index = indexArg === "" ? 0 : Number(indexArg);
+    if (mode === "--reanchor-clear") {
+      reanchorClear(patchId, Number.isInteger(index) && indexArg !== "" ? index : undefined);
+      console.log(`✓ 已清除 #${patchId} 的重锚覆盖 / override cleared`);
+      console.log(`  文件 / file: ${overrideFile()}`);
+      return;
+    }
+    const spec = flagValue("--lines");
+    const m = /^(\d+)\s*[-:]\s*(\d+)$/.exec(spec);
+    if (!m) {
+      console.log("用法: dsh-purge --reanchor 13 [--index 0] --lines 42-44 [--yes]");
+      console.log("  先用 --diagnose 看候选行号，确认后再带 --yes 写入。");
+      process.exit(1);
+    }
+    const from = Number(m[1]);
+    const to = Number(m[2]);
+    if (!args.includes("--yes")) {
+      // dry-run：把要钉的那段原文打出来，让人确认这段就是目标代码。
+      const { findCandidates } = await import("../lib/diagnose.js");
+      const patch = core.ALL_PATCHES.find((p) => p.id === patchId);
+      const key = Array.isArray(patch?.file) ? patch.file[0] : patch?.file;
+      const files = core.targetFiles(state.ai_base);
+      const fp = Array.isArray(files[key]) ? files[key][0] : files[key];
+      const text = fp ? (await import("node:fs")).readFileSync(fp, "utf8") : "";
+      const lines = text.split(/\r?\n/);
+      console.log(`[dry-run] #${patchId} 将把 ${fp} 的 L${from}-${to} 钉成新锚点：`);
+      for (let i = from; i <= Math.min(to, lines.length); i += 1) console.log(`  ${i}: ${lines[i - 1]}`);
+      console.log("");
+      console.log("确认无误后加 --yes 写入。候选提示：", JSON.stringify(findCandidates(text, text.split(/\r?\n/)[from - 1] || "").length));
+      return;
+    }
+    const r = reanchorPatch(state.ai_base, patchId, index, from, to);
+    console.log(`✓ #${r.patchId} 锚点[${r.index}] 已重锚 / reanchored`);
+    console.log(`  文件 / file: ${r.file}`);
+    console.log(`  行号 / lines: ${r.lines}`);
+    console.log(`  覆盖 / override: ${overrideFile()}`);
+    console.log("  → 再跑一次 --apply 让新锚点生效。");
+    return;
+  }
   if (mode === "--apply") {
     if (!state.ai_base) {
       console.log("[ERROR] " + core.missingAiBaseMessage());
@@ -145,7 +245,7 @@ async function main() {
        （界面卸载是把这一步交给独立助手，等端口释放后再删。） */
     const fs = await import("node:fs");
     for (const dir of result.cleanup || []) {
-      try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 120 }); }
+      try { removeTreeNoFollowSync(dir, { fs, maxRetries: 8, retryDelay: 120 }); }
       catch (e) { console.log(`  ⚠ 未能删除 ${dir}: ${e && e.message ? e.message : e}`); }
     }
     console.log("");
